@@ -9,11 +9,32 @@ from pypdf.errors import PdfReadError
 from main import extract_data
 
 
-st.title("Smart Document Extractor")
+st.title("Less Confusing. More Focus.")
+
+st.subheader("Smart Document Extractor")
 
 st.write(
-    "Upload your documents and extract data easily."
+    "Spend less time copying information by hand."
 )
+
+st.write(
+    "Upload TXT, CSV, or text-based PDF files, "
+    "review the results, and download them as CSV."
+)
+
+with st.expander("Supported files and current limits"):
+    st.markdown("""
+    **Supported files**
+    - TXT: Simple field-and-value text
+    - CSV: Tables with column headers
+    - PDF: Text-based PDF documents
+
+    **Current limits**
+    - Scanned PDFs and images are not supported yet.
+    - Complex PDF layouts may not be preserved.
+    - Please review extracted data before using it.
+    """)
+
 
 uploaded_files = st.file_uploader(
     "Choose documents",
