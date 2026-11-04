@@ -1,2 +1,5 @@
 streamlit
 pypdf
+pytesseract
+Pillow
+PyMuPDF==1.26.7  

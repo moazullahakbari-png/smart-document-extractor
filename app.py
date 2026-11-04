@@ -1,5 +1,8 @@
-
+import fitz
+import pytesseract
+from PIL import Image
 import streamlit as st
+
 import csv
 import io
 import os
@@ -7,6 +10,12 @@ import os
 from pypdf import PdfReader
 from pypdf.errors import PdfReadError
 from main import extract_data
+
+if os.name == "nt":
+    tesseract_path = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
+
+    if os.path.exists(tesseract_path):
+        pytesseract.pytesseract.tesseract_cmd = tesseract_path 
 
 
 st.title("Less Confusing. More Focus.")
@@ -117,8 +126,9 @@ for file_index, uploaded_file in enumerate(uploaded_files or []):
                 key=f"download_{file_index}"
             )
 
+       
         # PDF processing
-        elif filename.endswith(".pdf"):
+        elif filename.lower().endswith(".pdf"):
             reader = PdfReader(io.BytesIO(file_bytes))
 
             if reader.is_encrypted:
@@ -127,23 +137,54 @@ for file_index, uploaded_file in enumerate(uploaded_files or []):
 
             page_rows = []
 
-            for page_number, page in enumerate(reader.pages, start=1):
-                text = page.extract_text() or ""
+            # Open the PDF for rendering pages as images
+            pdf_document = fitz.open(
+                stream=file_bytes,
+                filetype="pdf"
+            )
 
-                if text.strip():
-                    page_rows.append({
-                        "Page": page_number,
-                        "Text": text.strip()
-                    })
+            try:
+                for page_number, page in enumerate(
+                    reader.pages, start=1
+                ):
+                    text = page.extract_text() or ""
+
+                    # Use OCR when this page has no extractable text
+                    if not text.strip():
+                        pdf_page = pdf_document[page_number - 1]
+
+                        pix = pdf_page.get_pixmap(
+                            matrix=fitz.Matrix(2, 2),
+                            alpha=False
+                        )
+
+                        image = Image.frombytes(
+                            "RGB",
+                            [pix.width, pix.height],
+                            pix.samples
+                        )
+
+                        text = pytesseract.image_to_string(
+                            image,
+                            lang="eng"
+                        )
+
+                    if text.strip():
+                        page_rows.append({
+                            "Page": page_number,
+                            "Text": text.strip()
+                        })
+
+            finally:
+                pdf_document.close()
 
             if not page_rows:
                 st.warning(
-                    "No extractable text found. "
-                    "This PDF may be scanned."
+                    "No text could be extracted from this PDF."
                 )
                 continue
 
-            st.metric("Pages with text", len(page_rows))
+            st.metric("Pages with extracted text", len(page_rows))
             st.dataframe(page_rows, use_container_width=True)
 
             output = io.StringIO(newline="")
