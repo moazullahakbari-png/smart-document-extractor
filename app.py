@@ -36,11 +36,11 @@ with st.expander("Supported files and current limits"):
     **Supported files**
     - TXT: Simple field-and-value text
     - CSV: Tables with column headers
-    - PDF: Text-based PDF documents
+    - PDF: Text-based and scanned PDF documents (English OCR)
 
     **Current limits**
-    - Scanned PDFs and images are not supported yet.
-    - Complex PDF layouts may not be preserved.
+    - OCR works best with clear, printed English text.
+    - Complex PDF layouts and tables may not be preserved accurately.
     - Please review extracted data before using it.
     """)
 
